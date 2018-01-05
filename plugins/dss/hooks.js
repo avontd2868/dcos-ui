@@ -10,7 +10,6 @@ import FieldAutofocus from "#SRC/js/components/form/FieldAutofocus";
 import FieldError from "#SRC/js/components/form/FieldError";
 import FieldInput from "#SRC/js/components/form/FieldInput";
 import FieldLabel from "#SRC/js/components/form/FieldLabel";
-import FieldSelect from "#SRC/js/components/form/FieldSelect";
 import FormGroup from "#SRC/js/components/form/FormGroup";
 import FormGroupHeading from "#SRC/js/components/form/FormGroupHeading";
 import FormGroupHeadingContent
@@ -27,7 +26,21 @@ import VolumeDefinitions
   from "#PLUGINS/services/src/js/constants/VolumeDefinitions";
 
 const errorsLens = Objektiv.attr("container", {}).attr("volumes", []);
-const excludedTypes = ["EPHEMERAL"];
+const excludedTypesSingleContainer = ["EPHEMERAL"];
+const excludedTypesMultiContainer = ["EXTERNAL"];
+
+function mapOptions(type, index) {
+  return (
+    <SelectOption key={index} value={type} label={VolumeDefinitions[type].type}>
+      <span className="dropdown-select-item-title">
+        {VolumeDefinitions[type].name}
+      </span>
+      <span className="dropdown-select-item-description">
+        {VolumeDefinitions[type].description}
+      </span>
+    </SelectOption>
+  );
+}
 
 function getContainerMounts(containers, volumeMountIndex, volumeMounts) {
   return containers.map((container, containerIndex) => {
@@ -76,23 +89,18 @@ function getContainerMounts(containers, volumeMountIndex, volumeMounts) {
 }
 
 function VolumeMountTypesSelect(props) {
+  const { volumes, index } = props;
+
   return (
-    <FieldSelect
-      name={`volumeMounts.${props.index}.type`}
-      value={props.volumes.type}
+    <Select
+      name={`volumeMounts.${index}.type`}
+      value={volumes.type}
+      placeholder="Select ..."
     >
-      <option value="">Select...</option>
-      <option value={VolumeConstants.type.host}>Host Volume</option>
-      <option value={VolumeConstants.type.ephemeral}>
-        Ephemeral Volume
-      </option>
-      <option value={VolumeConstants.type.localPersistent}>
-        Local Persistent Volume
-      </option>
-      <option value={VolumeConstants.type.dss}>
-        DC/OS Storage Service
-      </option>
-    </FieldSelect>
+      {Object.keys(VolumeDefinitions)
+        .filter(type => !excludedTypesMultiContainer.includes(type))
+        .map(mapOptions)}
+    </Select>
   );
 }
 
@@ -131,24 +139,7 @@ function DSSInput(props) {
             type="CreateService:MultiContainerVolumes:Types"
             volumes={volumes}
             index={index}
-          >
-            <FieldSelect
-              name={`volumeMounts.${index}.type`}
-              value={volumes.type}
-            >
-              <option value="">Select...</option>
-              <option value={VolumeConstants.type.host}>Host Volume</option>
-              <option value={VolumeConstants.type.ephemeral}>
-                Ephemeral Volume
-              </option>
-              <option value={VolumeConstants.type.localPersistent}>
-                Local Persistent Volume
-              </option>
-              <option value={VolumeConstants.type.dss}>
-                DC/OS Storage Service
-              </option>
-            </FieldSelect>
-          </MountService.Mount>
+          />
         </FormGroup>
         <FormGroup className="column-6" showError={Boolean(nameError)}>
           <FieldLabel>
@@ -217,23 +208,8 @@ function VolumeTypeSelect(props) {
       placeholder="Select ..."
     >
       {Object.keys(VolumeDefinitions)
-        .filter(type => !excludedTypes.includes(type))
-        .map((type, index) => {
-          return (
-            <SelectOption
-              key={index}
-              value={type}
-              label={VolumeDefinitions[type].type}
-            >
-              <span className="dropdown-select-item-title">
-                {VolumeDefinitions[type].name}
-              </span>
-              <span className="dropdown-select-item-description">
-                {VolumeDefinitions[type].description}
-              </span>
-            </SelectOption>
-          );
-        })}
+        .filter(type => !excludedTypesSingleContainer.includes(type))
+        .map(mapOptions)}
     </Select>
   );
 }
