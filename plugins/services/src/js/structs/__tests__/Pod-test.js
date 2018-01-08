@@ -4,6 +4,7 @@ const HealthStatus = require("../../constants/HealthStatus");
 const PodFixture = require("../../../../../../tests/_fixtures/pods/PodFixture");
 const ServiceImages = require("../../constants/ServiceImages");
 const ServiceStatus = require("../../constants/ServiceStatus");
+const PodInstanceState = require("../../constants/PodInstanceState");
 
 describe("Pod", function() {
   describe("#constructor", function() {
@@ -208,6 +209,58 @@ describe("Pod", function() {
         instances: [{ status: "pending" }]
       });
       expect(pod.getServiceStatus()).toEqual(ServiceStatus.NA);
+    });
+  });
+
+  describe("#getTaskCount", function() {
+    it("returns 0 if there are no instances", function() {
+      const pod = new Pod({
+        spec: {
+          scaling: {
+            kind: "fixed",
+            instances: 1
+          }
+        },
+        instances: []
+      });
+
+      expect(pod.getTaskCount()).toEqual(0);
+    });
+
+    it("returns 1 if there is one running instance", function() {
+      const pod = new Pod({
+        spec: {
+          scaling: {
+            kind: "fixed",
+            instances: 1
+          }
+        },
+        instances: [{ status: PodInstanceState.STABLE }]
+      });
+
+      expect(pod.getTaskCount()).toEqual(1);
+    });
+
+    it("returns 2 if tested against all possible states", function() {
+      const possibleStates = Object.values(PodInstanceState).map(function(
+        state
+      ) {
+        return {
+          status: state
+        };
+      });
+
+      const pod = new Pod({
+        spec: {
+          scaling: {
+            kind: "fixed",
+            instances: 1
+          }
+        },
+        instances: possibleStates
+      });
+
+      expect(pod.getTaskCount()).toEqual(2);
     });
   });
 

@@ -1,5 +1,6 @@
 import HealthStatus from "../constants/HealthStatus";
 import PodInstanceList from "./PodInstanceList";
+import PodInstanceStatus from "../constants/PodInstanceStatus";
 import PodSpec from "./PodSpec";
 import PodState from "../constants/PodState";
 import PodTerminationHistoryList from "./PodTerminationHistoryList";
@@ -147,6 +148,23 @@ module.exports = class Pod extends Service {
    */
   getSpec() {
     return this._spec;
+  }
+
+  /**
+   * Returns the amount of running instances, wheather they are healthy or not
+   * @override
+   */
+  getTaskCount() {
+    // duplication of PodInstanceView.getInstanceFilterStatus
+    return this.getInstanceList()
+      .filterItems(function(item) {
+        return [
+          PodInstanceStatus.HEALTHY,
+          PodInstanceStatus.UNHEALTHY,
+          PodInstanceStatus.RUNNING
+        ].includes(item.getInstanceStatus());
+      })
+      .getItems().length;
   }
 
   /**
