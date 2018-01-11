@@ -154,11 +154,7 @@ module.exports = class Pod extends Service {
    * @override
    */
   getTaskCount() {
-    return this.getInstanceList()
-      .filterItems(function(item) {
-        return item.isRunning();
-      })
-      .getItems().length;
+    return this.countRunningInstances();
   }
 
   /**
